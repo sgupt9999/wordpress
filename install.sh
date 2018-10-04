@@ -4,7 +4,7 @@
 ###########################################################################
 # Start of user inputs
 ###########################################################################
-IPSERVER=18.218.203.127
+IPSERVER=13.59.137.81
 ROOTPASSWORd="redhat" # For mariadb
 FIREWALL="yes" # firewalld should be up and running
 #FIREWALL="no"
@@ -27,13 +27,15 @@ WPADMINEMAIL="wpadmin@yahoo.com"
 if [[ $EUID != 0 ]]
 then
 	echo
-	echo
+	echo "#########################################################"
 	echo "ERROR. You need to have root privilges to run this script"
+	echo "#########################################################"
 	exit 1
 else
 	echo
-	echo
+	echo "###############################################################################"
 	echo "This script will install LAMP stack and a Wordpress site as per the user inputs"
+	echo "###############################################################################"
 	echo
 fi
 
@@ -43,6 +45,19 @@ INSTALLPACKAGES2="mariadb mariadb-server mariadb-libs"
 INSTALLPACKAGES3="php-mysql libzip php-common php-pdo php php-cli php-gd"
 INSTALLPACKAGES4="wget git"
 
+if yum list installed php &>/dev/null
+then
+        echo
+        echo "##################################################"
+        echo "Removing old instances of php and related packages"
+        yum remove $INSTALLPACKAGES3 -y &>/dev/null
+        rm -rf /etc/php.d
+        echo "Done"
+        echo "##################################################"
+fi
+
+echo $?
+
 if yum list installed httpd > /dev/null 2>&1
 then
         systemctl is-active -q httpd && {
@@ -50,7 +65,7 @@ then
                 systemctl disable -q httpd
         }
 	echo
-	echo
+	echo "###########################"
         echo "Removing all httpd packages"
         yum remove -y -q $INSTALLPACKAGES1
         userdel -r apache &>/dev/null
@@ -58,6 +73,7 @@ then
         rm -rf /etc/httpd
         rm -rf /usr/lib/httpd
         echo "Done"
+	echo "###########################"
 fi
 
 if yum list installed mariadb-server &>/dev/null
@@ -77,18 +93,6 @@ then
         echo "#################################"
 fi
 
-if yum list installed php &>/dev/null
-then
-        echo
-        echo "##################################################"
-        echo "Removing old instances of php and related packages"
-        yum remove $INSTALLPACKAGES3 -y &>/dev/null
-        rm -rf /etc/php.d
-        echo "Done"
-        echo "##################################################"
-fi
-
-
 echo
 echo "#############################################"
 echo "Installing support packages $INSTALLPACKAGES4"
@@ -104,17 +108,18 @@ echo "Done"
 echo "#################################"
 
 echo
-echo
+echo "#############################"
 echo "Installing $INSTALLPACKAGES2"
 yum install -y -q $INSTALLPACKAGES2 &>/dev/null
 echo "Done"
+echo "#############################"
 
 echo
-echo
+echo "###############################"
 echo "Installing $INSTALLPACKAGES3"
 yum install -y -q $INSTALLPACKAGES3 &>/dev/null
 echo "Done"
-
+echo "###############################"
 
 systemctl -q enable --now httpd &>/dev/null
 systemctl -q enable --now mariadb &>/dev/null
@@ -144,7 +149,7 @@ rm -rf latest.tar.gz
 rm -rf wordpress
 wget https://wordpress.org/latest.tar.gz
 tar xzvf latest.tar.gz
-rsync -avP ./wordpress/ /var/www/html/
+rsync -avP ./wordpress/ /var/www/html/ &>/dev/null
 mkdir /var/www/html/wp-content/uploads
 chown -R apache:apache /var/www/html/*
 cd /var/www/html
